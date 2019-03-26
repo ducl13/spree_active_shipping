@@ -1,4 +1,5 @@
 require 'spree/core'
+require 'spree_extension'
 require 'active_shipping'
 require 'spree_active_shipping/engine'
-require 'spree_extension'
+require 'spree_active_shipping/version'

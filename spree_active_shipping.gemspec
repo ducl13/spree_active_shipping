@@ -1,24 +1,29 @@
-# -*- encoding: utf-8 -*-
+# encoding: UTF-8
+lib = File.expand_path('../lib/', __FILE__)
+$LOAD_PATH.unshift lib unless $LOAD_PATH.include?(lib)
+
+require 'spree_active_shipping/version'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
 
   s.name        = 'spree_active_shipping'
-  s.version     = '3.3.0.beta'
+  s.version     = SpreeActiveShipping.version
   s.authors     = 'Sean Schofield'
   s.email       = 'sean@spreecommerce.com'
-  s.homepage    = 'http://github.com/spree-contrib/spree_active_shipping'
+  s.homepage    = 'http://github.com/ducl13/spree_active_shipping'
   s.summary     = 'Spree extension for providing shipping methods that wrap the active_shipping plugin.'
   s.description = 'Spree extension for providing shipping methods that wrap the active_shipping plugin.'
-  s.required_ruby_version = '>= 2.1.0'
-  s.rubygems_version      = '>= 1.8.23'
+  s.required_ruby_version = '>= 2.3.3'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.require_paths = ["lib"]
 
-  s.add_dependency 'spree_core', '>= 3.1.0', '< 4.0'
-  s.add_dependency 'active_shipping', '~> 1.4'
+  spree_version = '>= 3.2.0', '< 5.0'
+  s.add_dependency 'spree_core', spree_version
+  # See Gemfile for forked version
+  s.add_dependency 'active_shipping'
   s.add_dependency 'spree_extension'
 
   s.add_development_dependency 'pry'
