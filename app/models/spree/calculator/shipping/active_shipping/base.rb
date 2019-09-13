@@ -171,6 +171,62 @@ module Spree
           weights.flatten.compact.sort
         end
 
+        def convert_package_to_weights_packages_array(package)
+          multiplier = Spree::ActiveShipping::Config[:unit_multiplier]
+          default_weight = Spree::ActiveShipping::Config[:default_weight]
+          max_weight = get_max_weight(package)
+          packages = []
+
+          weights = package.contents.map do |content_item|
+            item_weight = content_item.variant.weight.to_f
+            item_weight = default_weight if item_weight <= 0
+            item_weight *= multiplier
+            quantity = content_item.quantity
+            Array.new(quantity, item_weight)
+          end
+          weights = weights.flatten
+          
+          while weights.length > 0 do
+            max_weight_subarr = find_max_sum_subarray(weights, weights.length, max_weight)
+
+            packages << max_weight_subarr[0]
+            max_weight_subarr[1].each do |del|
+              weights.delete_at(weights.index(del))
+            end
+          end
+
+          packages
+        end
+
+        # From: https://www.geeksforgeeks.org/maximum-sum-subarray-sum-less-equal-given-sum/
+        def find_max_sum_subarray(arr, n, sum)
+          curr_sum = arr[0]
+          curr_arr = [arr[0]]
+          max_sum = 0
+          start = 0
+          
+          1.upto(n-1) do |i|
+            if (curr_sum <= sum)
+              max_sum = [max_sum, curr_sum].max;
+            end
+
+            while curr_sum + arr[i] > sum && start < i do
+              curr_sum -= arr[start]
+              curr_arr.pop
+              start += 1
+            end
+            
+            curr_sum += arr[i];
+            curr_arr << arr[i];
+          end
+          
+          if (curr_sum <= sum)
+            max_sum = [max_sum, curr_sum].max;
+          end
+
+          [max_sum, curr_arr]
+        end
+
         def convert_package_to_item_packages_array(package)
           multiplier = Spree::ActiveShipping::Config[:unit_multiplier]
           max_weight = get_max_weight(package)
@@ -207,24 +263,19 @@ module Spree
         def packages(package)
           units = Spree::ActiveShipping::Config[:units].to_sym
           packages = []
-          weights = convert_package_to_weights_array(package)
           max_weight = get_max_weight(package)
           dimensions = convert_package_to_dimensions_array(package)
+
           item_specific_packages = convert_package_to_item_packages_array(package)
 
           if max_weight <= 0
+            weights = convert_package_to_weights_array(package)
             packages << ::ActiveShipping::Package.new(weights.sum, dimensions, units: units)
           else
-            package_weight = 0
-            weights.each do |content_weight|
-              if package_weight + content_weight <= max_weight
-                package_weight += content_weight
-              else
-                packages << ::ActiveShipping::Package.new(package_weight, dimensions, units: units)
-                package_weight = content_weight
-              end
+            weights_packages = convert_package_to_weights_packages_array(package)
+            weights_packages.each do |package|
+              packages << ::ActiveShipping::Package.new(package, dimensions, units: units)
             end
-            packages << ::ActiveShipping::Package.new(package_weight, dimensions, units: units) if package_weight > 0
           end
 
           item_specific_packages.each do |package|
