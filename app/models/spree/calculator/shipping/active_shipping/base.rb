@@ -43,7 +43,7 @@ module Spree
           rate = rate.to_f + (Spree::ActiveShipping::Config[:handling_fee].to_f || 0.0)
 
           # divide by 100 since active_shipping rates are expressed as cents
-          return rate/100.0
+          return up_to_nearest_5(rate)/100.0
         end
 
         def timing(line_items)
@@ -71,6 +71,13 @@ module Spree
         # weight limit in ounces or zero (if there is no limit)
         def max_weight_for_country(country)
           0
+        end
+
+        # round up to nearest 5
+        def up_to_nearest_5(f)
+          return f if f % 5 == 0
+          rounded = f.round(-1)
+          rounded > f ? rounded : rounded + 5
         end
 
         private
