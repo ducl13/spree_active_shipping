@@ -165,10 +165,11 @@ module Spree
           max_weight = get_max_weight(package)
 
           weights = package.contents.map do |content_item|
-            item_weight = content_item.variant.weight.to_f * content_item.quantity.to_f
+            item_weight = content_item.variant.weight.to_f
             item_weight = default_weight if item_weight <= 0
             item_weight *= multiplier
-
+            item_weight = item_weight * content_item.quantity.to_f
+            
             if max_weight <= 0 || item_weight < max_weight
               item_weight
             else
